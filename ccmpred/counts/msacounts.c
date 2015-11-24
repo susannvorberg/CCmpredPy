@@ -41,9 +41,7 @@ void msa_count_pairs(double *counts, uint8_t *msa, double *weights, uint32_t nro
 
 void msa_char_to_index(uint8_t *msa, uint32_t nrow, uint32_t ncol) {
 
-	int amino_indices[29];
-	int n, i;
-	unsigned char c;
+	uint8_t amino_indices[29];
 
 	// Make hash lookup table for amino acid characters to amino acid numbers
 	// hash keys are the ASCII codes of the upper-case amino acids, modulo 29.
@@ -52,7 +50,7 @@ void msa_char_to_index(uint8_t *msa, uint32_t nrow, uint32_t ncol) {
 	// aa   A  R  N  D  C  Q  E  G  H  I  L  K  M  F  P  S  T  W  Y  V  -
 	// asc 65 82 78 68 67 81 69 71 72 73 76 75 77 70 80 83 84 87 89 86 45
 	// mod  7 24 20 10  9 23 11 13 14 15 18 17 19 12 22 25 26  0  2 28 16
-	for(c = 0; c < 29; c++) {
+	for(uint8_t c = 0; c < 29; c++) {
 		amino_indices[c] = 20;
 	}
 
@@ -78,8 +76,8 @@ void msa_char_to_index(uint8_t *msa, uint32_t nrow, uint32_t ncol) {
 	amino_indices[28] = 19; // V
 	amino_indices[16] = 20;	// -
 
-	for(n = 0; n < nrow; n++) {
-		for(i = 0; i < ncol; i++) {
+	for(uint32_t n = 0; n < nrow; n++) {
+		for(uint32_t i = 0; i < ncol; i++) {
 			msa[n * ncol + i] = amino_indices[ toupper(msa[n * ncol + i]) % 29 ];
 		}
 	}
@@ -89,10 +87,9 @@ void msa_char_to_index(uint8_t *msa, uint32_t nrow, uint32_t ncol) {
 
 void msa_index_to_char(uint8_t *msa, uint32_t nrow, uint32_t ncol) {
 	uint8_t char_indices[] = {'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', '-' };
-	int n, i;
 
-	for(n = 0; n < nrow; n++) {
-		for(i = 0; i < ncol; i++) {
+	for(uint32_t n = 0; n < nrow; n++) {
+		for(uint32_t i = 0; i < ncol; i++) {
 			msa[n * ncol + i] = char_indices[msa[n * ncol + i]];
 		}
 	}
