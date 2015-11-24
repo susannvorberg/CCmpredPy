@@ -8,14 +8,12 @@
 #define N_ALPHA 21
 
 void msa_count_single(double *counts, uint8_t *msa, double *weights, uint32_t nrow, uint32_t ncol) {
-	int n, i;
-	unsigned char a;
-
+	// counts[i, a]
 	memset(counts, 0, sizeof(double) * ncol * N_ALPHA);
 
-	for(n = 0; n < nrow; n++) {
-		for(i = 0; i < ncol; i++) {
-			a = msa[n * ncol + i];
+	for(uint32_t n = 0; n < nrow; n++) {
+		for(uint32_t i = 0; i < ncol; i++) {
+			uint8_t a = msa[n * ncol + i];
 			counts[i * N_ALPHA + a] += weights[n];
 		}
 	}
@@ -23,17 +21,19 @@ void msa_count_single(double *counts, uint8_t *msa, double *weights, uint32_t nr
 
 
 void msa_count_pairs(double *counts, uint8_t *msa, double *weights, uint32_t nrow, uint32_t ncol) {
+
+	// counts[i, j, a, b]
 	memset(counts, 0, sizeof(double) * ncol * ncol * N_ALPHA * N_ALPHA);
 
 	#pragma omp parallel
 	#pragma omp for nowait
-	for(int ij = 0; ij < ncol * ncol; ij++) {
-		int i = ij / ncol;
-		int j = ij % ncol;
-		for(int n = 0; n < nrow; n++) {
+	for(uint32_t ij = 0; ij < ncol * ncol; ij++) {
+		uint32_t i = ij / ncol;
+		uint32_t j = ij % ncol;
+		for(uint32_t n = 0; n < nrow; n++) {
 
-			unsigned char a = msa[n * ncol + i];
-			unsigned char b = msa[n * ncol + j];
+			uint8_t a = msa[n * ncol + i];
+			uint8_t b = msa[n * ncol + j];
 			counts[((i * ncol + j) * N_ALPHA + a) * N_ALPHA + b] += weights[n];
 		}
 	}
