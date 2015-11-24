@@ -39,6 +39,28 @@ void msa_count_pairs(double *counts, uint8_t *msa, double *weights, uint32_t nro
 	}
 }
 
+void msa_count_triplets(double *counts, uint8_t *msa, double *weights, uint32_t nrow, uint32_t ncol, uint32_t ntriplets, uint32_t *triplets) {
+
+	// counts[t, a, b, c]
+	memset(counts, 0, sizeof(double) * ntriplets * N_ALPHA * N_ALPHA * N_ALPHA);
+
+	#pragma omp parallel
+	#pragma omp for nowait
+	for(uint32_t t = 0; t < ntriplets; t++) {
+		uint32_t i = triplets[t * 3];
+		uint32_t j = triplets[t * 3 + 1];
+		uint32_t k = triplets[t * 3 + 2];
+
+		for(uint32_t n = 0; n < nrow; n++) {
+			uint8_t a = msa[n * ncol + i];
+			uint8_t b = msa[n * ncol + j];
+			uint8_t c = msa[n * ncol + k];
+			counts[((t * N_ALPHA + a) * N_ALPHA + b) * N_ALPHA + c] += weights[n];
+		}
+	}
+
+}
+
 void msa_char_to_index(uint8_t *msa, uint32_t nrow, uint32_t ncol) {
 
 	uint8_t amino_indices[29];
