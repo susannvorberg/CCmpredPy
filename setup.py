@@ -17,6 +17,10 @@ setup(
             sources=['ccmpred/objfun/pll/cext/pll.c']
         ),
         ext(
+            'ccmpred.objfun.triplet.cext.libtriplet',
+            sources=['ccmpred/objfun/triplet/cext/triplet.c']
+        ),
+        ext(
             'ccmpred.objfun.cd.cext.libcd',
             sources=[
                 'ccmpred/objfun/cd/cext/cd.c',

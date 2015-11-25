@@ -1,0 +1,156 @@
+#include <math.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "triplet.h"
+
+double evaluate_triplet_pll(
+	const double *x,
+	double *g,
+	const double *weights,
+	const uint8_t *msa,
+	const uint32_t *triplets,
+	const uint32_t nrow,
+	const uint32_t ncol,
+	const uint32_t ntriplets
+) {
+	// partition x and g into pointers x1, x2, x3 and g1, g2, g3
+	const uint32_t x2pos = ncol * N_ALPHA;
+	const uint32_t x3pos = x2pos + ncol * ncol * N_ALPHA * N_ALPHA;
+	const uint64_t nvar = x3pos + ntriplets * N_ALPHA * N_ALPHA * N_ALPHA;
+	const double *x1 = x;
+	const double *x2 = &x[x2pos];
+	const double *x3 = &x[x3pos];
+	double *g1 = g;
+	double *g2 = &g[x2pos];
+	double *g3 = &g[x3pos];
+
+	// set fx and gradient to 0 initially
+	double fx = 0.0;
+	memset(g, 0, sizeof(double) * nvar);
+
+	double *sum_pot = malloc(sizeof(double) * ncol * N_ALPHA);
+	double *log_z   = malloc(sizeof(double) * ncol);
+	double *p_cond  = malloc(sizeof(double) * ncol * N_ALPHA);
+
+	for(uint32_t n = 0; n < nrow; n++) {
+		double weight = weights[n];
+
+		// compute sum_pot
+		memset(sum_pot, 0, sizeof(double) * ncol * N_ALPHA);
+		for(uint32_t i = 0; i < ncol; i++) {
+			for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
+				SUMPOT(i, a) = X1(i, a);
+			}
+		}
+
+		for(uint32_t i = 0, ij = 0; i < ncol; i++) {
+			for(uint32_t j = i + 1; j < ncol; j++, ij++) {
+				for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
+					SUMPOT(i, a) += X2(ij, a, X(n, j));
+				}
+			}
+		}
+
+		for(uint32_t t = 0; t < ntriplets; t++) {
+			uint32_t i = triplets[t * 3];
+			uint32_t j = triplets[t * 3 + 1];
+			uint32_t k = triplets[t * 3 + 2];
+
+			for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
+				SUMPOT(i, a) += X3(t, a, X(n, j), X(n, k));
+			}
+		}
+
+		// compute log_z
+		memset(log_z, 0, sizeof(double) * ncol);
+		for(uint32_t i = 0; i < ncol; i++) {
+			for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
+				log_z[i] += exp(SUMPOT(i, a));
+			}
+			log_z[i] = log(log_z[i]);
+		}
+
+		// compute p_cond
+		memset(p_cond, 0, sizeof(double) * ncol * N_ALPHA);
+		for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
+			for(uint32_t i = 0; i < ncol; i++) {
+				PCOND(i, a) = exp(SUMPOT(i, a) - log_z[i]);
+			}
+		}
+
+		// compute fx
+		for(uint32_t i = 0; i < ncol; i++) {
+			fx -= weight * (SUMPOT(i, X(n, i)) - log_z[i]);
+		}
+
+		
+		// compute g1
+		for(uint32_t i = 0; i < ncol; i++) {
+			for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
+				G1(i, a) -= weight * PCOND(i, a);
+			}
+		}
+
+		// compute g2
+		for(uint32_t i = 0, ij = 0; i < ncol; i++) {
+			for(uint32_t j = i + 1; j < ncol; j++, ij++) {
+				uint8_t xnj = X(n, j);
+
+				for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
+					G2(ij, a, xnj) -= weight * PCOND(i, a);
+				}
+			}
+		}
+
+		// compute g3
+		for(uint32_t t = 0; t < ntriplets; t++) {
+			uint32_t i = triplets[t * 3];
+			uint32_t j = triplets[t * 3 + 1];
+			uint32_t k = triplets[t * 3 + 2];
+
+			for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
+				G3(t, a, X(n, j), X(n, k)) -= weight * PCOND(i, a);
+			}
+		}
+
+		// TODO gap handling
+		// TODO check signs for negative PLL gradients, fx
+
+	}
+
+	// zero out possible gap gradients in G1
+	for(uint32_t i = 0; i < ncol; i++) {
+		G1(i, N_ALPHA - 1) = 0;
+	}
+
+	// zero out possible gap gradients in G2
+	uint32_t nij = ncol * (ncol - 1) / 2;
+	for(uint32_t ij = 0; ij < nij; ij++) {
+		for(uint8_t a = 0; a < N_ALPHA; a++) {
+			G2(ij, a, N_ALPHA - 1) = 0;
+			G2(ij, N_ALPHA - 1, a) = 0;
+		}
+	}
+
+	// zero out possible gap gradients in G3
+	for(uint32_t t = 0; t < ntriplets; t++) {
+		for(uint8_t a = 0; a < N_ALPHA; a++) {
+			for(uint8_t b = 0; b < N_ALPHA; b++) {
+				G3(t, a, b, N_ALPHA - 1) = 0;
+				G3(t, a, N_ALPHA - 1, b) = 0;
+				G3(t, N_ALPHA - 1, a, b) = 0;
+			}
+		}
+	}
+
+	free(sum_pot);
+	free(log_z);
+	free(p_cond);
+
+	return fx;
+}
