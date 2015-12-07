@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-import numpy as np
 import argparse
 
 from ccmpred import AMINO_ACIDS
 import ccmpred.raw
 import ccmpred.triplets
-
-N_ALPHA = 20
 
 
 def parse_args():
@@ -34,7 +31,7 @@ def main():
 
     for t in range(triplets.shape[0]):
         trp = triplets[t]
-        print("[{0:4d}] {1}/{2}/{3}:\t{4}-{5}-{6}".format(t, trp[0], trp[1], trp[2], AMINO_ACIDS[trp[3]], AMINO_ACIDS[trp[4]], AMINO_ACIDS[trp[5]]))
+        print("[{0:4d}] {1:3d} /{2:3d} /{3:3d}:\t{4}-{5}-{6}".format(t, trp[0], trp[1], trp[2], AMINO_ACIDS[trp[3]], AMINO_ACIDS[trp[4]], AMINO_ACIDS[trp[5]]))
 
 if __name__ == '__main__':
     main()
