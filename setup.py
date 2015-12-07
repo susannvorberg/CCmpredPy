@@ -47,6 +47,12 @@ setup(
             extra_link_args=['-g'],
         ),
         ext(
+            'ccmpred.triplets.libtriplets',
+            sources=['ccmpred/triplets/triplets.c', 'ccmpred/triplets/heap.c'],
+            extra_compile_args=['-g -std=c99'],
+            extra_link_args=['-g'],
+        ),
+        ext(
             'ccmpred.weighting.cext.libweighting',
             sources=['ccmpred/weighting/cext/weighting.c']
         )

@@ -1,43 +1,40 @@
 #!/usr/bin/env python
 import numpy as np
 import argparse
-import heapq
-import operator
+
+from ccmpred import AMINO_ACIDS
+import ccmpred.raw
+import ccmpred.triplets
+
+N_ALPHA = 20
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("matfile", help="The prediction matrix file to use for ranking pairs")
+    parser.add_argument("rawfile", help="The prediction raw file to use for ranking pairs")
+    parser.add_argument("-n", "--n-triplets", type=int, default=1000, help="Maximum number of triplets (default: %(default)d)")
+    parser.add_argument("-s", "--min-separation", type=int, default=5, help="Minimum sequence separation (default: %(default)d)")
 
     args = parser.parse_args()
 
     return args
 
 
-def pick_triplets(mat, n_triplets=100):
-    ncol = mat.shape[0]
+def pick_triplets(x_pair, n_triplets=100, min_separation=5):
+    triplets = ccmpred.triplets.find_triplets(x_pair, n_triplets, min_separation)
 
-    top_triplets = heapq.nlargest(n_triplets, (
-        ((i, j, k), mat[i, j] + mat[j, k] + mat[k, i])
-        for i in range(ncol)
-        for j in range(i + 1, ncol)
-        for k in range(j + 1, ncol)
-    ), key=operator.itemgetter(1))
-
-    return top_triplets
+    return triplets
 
 
 def main():
     args = parse_args()
 
-    mat = np.loadtxt(args.matfile)
-    triplets = pick_triplets(mat)
+    raw = ccmpred.raw.parse(args.rawfile)
+    triplets = pick_triplets(raw.x_pair, args.n_triplets, args.min_separation)
 
-    print("\n".join(
-        "{0}, {1}, {2}: {3}".format(i, j, k, score)
-        for (i, j, k), score in triplets
-    ))
-
+    for t in range(triplets.shape[0]):
+        trp = triplets[t]
+        print("[{0:4d}] {1}/{2}/{3}:\t{4}-{5}-{6}".format(t, trp[0], trp[1], trp[2], AMINO_ACIDS[trp[3]], AMINO_ACIDS[trp[4]], AMINO_ACIDS[trp[5]]))
 
 if __name__ == '__main__':
     main()
