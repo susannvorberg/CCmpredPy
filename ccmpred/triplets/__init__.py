@@ -45,11 +45,17 @@ def find_triplet3(x_pair, n_triplets, min_separation):
     return triplets[:ntrip, :], triplet_scores[:ntrip]
 
 
-def triplet3to6(triplet3):
-    amino_grid = np.array(list(itertools.product(* ([range(20)] * 3))))
+def triplet3to6(triplet3, short=False):
+    if short:
+        triplet6 = np.empty((triplet3.shape[0], 6), dtype="uint32")
+        triplet6[:, :3] = triplet3
+        triplet6[:, 3:6] = 0
 
-    triplet6 = np.empty((triplet3.shape[0] * amino_grid.shape[0], 6), dtype="uint32")
-    triplet6[:, :3] = np.repeat(triplet3, amino_grid.shape[0], axis=0)
-    triplet6[:, 3:6] = np.repeat(amino_grid, triplet3.shape[0], axis=0)
+    else:
+        amino_grid = np.array(list(itertools.product(* ([range(20)] * 3))))
+
+        triplet6 = np.empty((triplet3.shape[0] * amino_grid.shape[0], 6), dtype="uint32")
+        triplet6[:, :3] = np.repeat(triplet3, amino_grid.shape[0], axis=0)
+        triplet6[:, 3:6] = np.repeat(amino_grid, triplet3.shape[0], axis=0)
 
     return triplet6
