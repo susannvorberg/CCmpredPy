@@ -39,10 +39,10 @@ def main():
 
     tcounts = ccmpred.counts.triplet_counts(msa, triplet6)
 
-    print("    t    i    j    k \ta b c  counts        score")
+    print("   t   i    j    k  a b c  counts        score")
     for t in range(triplet6.shape[0]):
         trp = triplet6[t]
-        print("[{0:4d}] {1:3d} /{2:3d} /{3:3d}:\t{4}-{5}-{6}: {7:6.0f} {8:.6e}".format(t, trp[0], trp[1], trp[2], AMINO_ACIDS[trp[3]], AMINO_ACIDS[trp[4]], AMINO_ACIDS[trp[5]], tcounts[t], triplet_scores[t]))
+        print("{0:4d} {1:3d}  {2:3d}  {3:3d}  {4} {5} {6}  {7:6.0f} {8:.6e}".format(t, trp[0], trp[1], trp[2], AMINO_ACIDS[trp[3]], AMINO_ACIDS[trp[4]], AMINO_ACIDS[trp[5]], tcounts[t], triplet_scores[t]))
 
 if __name__ == '__main__':
     main()
