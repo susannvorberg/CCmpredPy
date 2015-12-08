@@ -17,21 +17,20 @@ def parse_args():
     return args
 
 
-def pick_triplets(x_pair, n_triplets=100, min_separation=5):
-    triplets = ccmpred.triplets.find_triplets(x_pair, n_triplets, min_separation)
-
-    return triplets
-
-
 def main():
     args = parse_args()
 
     raw = ccmpred.raw.parse(args.rawfile)
-    triplets = pick_triplets(raw.x_pair, args.n_triplets, args.min_separation)
+    triplets = ccmpred.triplets.find_triplet6(raw.x_pair, args.n_triplets, args.min_separation)
 
     for t in range(triplets.shape[0]):
         trp = triplets[t]
         print("[{0:4d}] {1:3d} /{2:3d} /{3:3d}:\t{4}-{5}-{6}".format(t, trp[0], trp[1], trp[2], AMINO_ACIDS[trp[3]], AMINO_ACIDS[trp[4]], AMINO_ACIDS[trp[5]]))
+
+    triplets = ccmpred.triplets.find_triplet3(raw.x_pair, args.n_triplets, args.min_separation)
+    for t in range(triplets.shape[0]):
+        trp = triplets[t]
+        print("[{0:4d}] {1:3d} /{2:3d} /{3:3d}".format(t, trp[0], trp[1], trp[2]))
 
 if __name__ == '__main__':
     main()

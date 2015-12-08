@@ -22,7 +22,7 @@ int compare_triplet3(const void *a, const void *b) {
 }
 
 
-uint64_t find_triplets(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
+uint64_t find_triplet6(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
 
 	heap_t *heap = heap_init(ntriplets, sizeof(triplet6_t), compare_triplet6);
 
@@ -36,9 +36,7 @@ uint64_t find_triplets(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32
 
 							double score = X2(i, j, a, b) + X2(i, k, a, c) + X2(j, k, b, c);
 							triplet6_t trp = {i, j, k, a, b, c, score};
-
 							heap_push_over(heap, &trp);
-
 						}
 					}
 				}
@@ -51,14 +49,53 @@ uint64_t find_triplets(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32
 
 	for(uint32_t t = 0; t < heap->length; t++) {
 		triplet6_t *trp = (triplet6_t *)(heap->data + t * sizeof(triplet6_t));
-
 		triplets[t * 6 + 0] = trp->i;
 		triplets[t * 6 + 1] = trp->j;
 		triplets[t * 6 + 2] = trp->k;
-
 		triplets[t * 6 + 3] = trp->a;
 		triplets[t * 6 + 4] = trp->b;
 		triplets[t * 6 + 5] = trp->c;
+	}
+
+	uint64_t len = heap->length;
+
+	heap_free(heap);
+
+	return len;
+
+}
+
+uint64_t find_triplet3(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
+
+	heap_t *heap = heap_init(ntriplets, sizeof(triplet3_t), compare_triplet3);
+
+	for(uint32_t i = 0; i < ncol; i++) {
+		for(uint32_t j = i + min_separation; j < ncol; j++) {
+			for(uint32_t k = j + min_separation; k < ncol; k++) {
+
+				double score = 0;
+				for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
+					for(uint8_t b = 0; b < N_ALPHA - 1; b++) {
+						for(uint8_t c = 0; c < N_ALPHA - 1; c++) {
+							score += X2(i, j, a, b) + X2(i, k, a, c) + X2(j, k, b, c);
+						}
+					}
+				}
+
+				triplet3_t trp = {i, j, k, score};
+				heap_push_over(heap, &trp);
+
+			}
+		}
+	}
+
+	qsort(heap->data, heap->length, sizeof(triplet3_t), compare_triplet6);
+
+	for(uint32_t t = 0; t < heap->length; t++) {
+		triplet3_t *trp = (triplet3_t *)(heap->data + t * sizeof(triplet3_t));
+		triplets[t * 3 + 0] = trp->i;
+		triplets[t * 3 + 1] = trp->j;
+		triplets[t * 3 + 2] = trp->k;
 	}
 
 	uint64_t len = heap->length;
