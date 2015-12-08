@@ -22,7 +22,7 @@ int compare_triplet3(const void *a, const void *b) {
 }
 
 
-uint64_t find_triplet6(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
+uint64_t find_triplet6(double *x_pair, uint32_t *triplets, double *triplet_scores, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
 
 	heap_t *heap = heap_init(ntriplets, sizeof(triplet6_t), compare_triplet6);
 
@@ -55,6 +55,7 @@ uint64_t find_triplet6(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32
 		triplets[t * 6 + 3] = trp->a;
 		triplets[t * 6 + 4] = trp->b;
 		triplets[t * 6 + 5] = trp->c;
+		triplet_scores[t] = trp->score;
 	}
 
 	uint64_t len = heap->length;
@@ -65,7 +66,7 @@ uint64_t find_triplet6(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32
 
 }
 
-uint64_t find_triplet3(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
+uint64_t find_triplet3(double *x_pair, uint32_t *triplets, double *triplet_scores, uint32_t ncol, uint32_t ntriplets, uint32_t min_separation) {
 
 	heap_t *heap = heap_init(ntriplets, sizeof(triplet3_t), compare_triplet3);
 
@@ -96,6 +97,7 @@ uint64_t find_triplet3(double *x_pair, uint32_t *triplets, uint32_t ncol, uint32
 		triplets[t * 3 + 0] = trp->i;
 		triplets[t * 3 + 1] = trp->j;
 		triplets[t * 3 + 2] = trp->k;
+		triplet_scores[t] = trp->score;
 	}
 
 	uint64_t len = heap->length;
