@@ -21,7 +21,7 @@ libmsac.msa_count_pairs.argtypes = [array_4d_float, array_2d_char, array_1d_floa
 
 # void msa_count_triplets(double *counts, uint8_t *msa, double *weights, uint32_t nrow, uint32_t ncol, uint32_t ntriplets, uint32_t *triplets) {
 libmsac.msa_count_triplets.restype = None
-libmsac.msa_count_triplets.argtypes = [array_4d_float, array_2d_char, array_1d_float, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, array_2d_uint32]
+libmsac.msa_count_triplets.argtypes = [array_1d_float, array_2d_char, array_1d_float, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, array_2d_uint32]
 
 libmsac.msa_char_to_index.restype = None
 libmsac.msa_char_to_index.argtypes = [array_2d_char, ctypes.c_uint32, ctypes.c_uint32]
@@ -38,7 +38,7 @@ def triplet_counts(msa, triplets, weights=None):
     if weights is None:
         weights = np.ones((nrow, ), dtype='float64')
 
-    counts = np.zeros((ntriplets, 21, 21, 21), dtype=np.dtype('float64'))
+    counts = np.zeros((ntriplets, ), dtype=np.dtype('float64'))
     libmsac.msa_count_triplets(counts, msa, weights, *msa.shape, ntriplets, triplets)
 
     return counts
