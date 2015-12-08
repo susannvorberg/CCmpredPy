@@ -42,11 +42,7 @@ def pick_best_ijkabc(x_pair, n_triplets, min_separation):
 def pick_best_ijk(x_pair, n_triplets, min_separation):
     triplet3, triplet_scores = ccmpred.triplets.find_triplet3(x_pair, n_triplets, min_separation)
 
-    for t in range(triplet3.shape[0]):
-        trp = triplet3[t]
-        print("[{0:4d}] {1:3d} /{2:3d} /{3:3d}".format(t, trp[0], trp[1], trp[2]))
-
-    # translate 3-triplets to 6-triplets enumerating all abc
+    # translate 3-triplets to 6-triplets using (a, b, c) = (A, A, A)
     triplet6 = ccmpred.triplets.triplet3to6(triplet3, short=True)
 
     triplet_scores = np.repeat(triplet_scores, 20 ** 3)
