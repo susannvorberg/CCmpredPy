@@ -11,9 +11,9 @@
 #define X2(ij,a,b) x2[x2_index(ij,a,b)]
 #define G2(ij,a,b) g2[x2_index(ij,a,b)]
 
-#define x3_index(t,a,b,c) (((t) * N_ALPHA + (a)) * N_ALPHA + (b)) * N_ALPHA + (c)
-#define X3(b,k,a,j) x3[x3_index(b,k,a,j)]
-#define G3(b,k,a,j) g3[x3_index(b,k,a,j)]
+#define x3_index(t) (t)
+#define X3(t) x3[t]
+#define G3(t) g3[t]
 
 #define msa_index(n,i) (n) * ncol + i
 #define X(n,i) msa[msa_index(n,i)]

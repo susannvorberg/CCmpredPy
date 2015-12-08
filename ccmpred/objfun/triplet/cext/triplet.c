@@ -21,7 +21,7 @@ double evaluate_triplet_pll(
 	// partition x and g into pointers x1, x2, x3 and g1, g2, g3
 	const uint32_t x2pos = ncol * N_ALPHA;
 	const uint32_t x3pos = x2pos + ncol * ncol * N_ALPHA * N_ALPHA;
-	const uint64_t nvar = x3pos + ntriplets * N_ALPHA * N_ALPHA * N_ALPHA;
+	const uint64_t nvar = x3pos + ntriplets;
 	const double *x1 = x;
 	const double *x2 = &x[x2pos];
 	const double *x3 = &x[x3pos];
@@ -57,12 +57,15 @@ double evaluate_triplet_pll(
 		}
 
 		for(uint32_t t = 0; t < ntriplets; t++) {
-			uint32_t i = triplets[t * 3];
-			uint32_t j = triplets[t * 3 + 1];
-			uint32_t k = triplets[t * 3 + 2];
+			uint32_t i = triplets[t * 6];
+			uint32_t j = triplets[t * 6 + 1];
+			uint32_t k = triplets[t * 6 + 2];
+			uint8_t a = triplets[t * 6 + 3];
+			uint8_t b = triplets[t * 6 + 4];
+			uint8_t c = triplets[t * 6 + 5];
 
-			for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
-				SUMPOT(i, a) += X3(t, a, X(n, j), X(n, k));
+			if(X(n, j) == b && X(n, k) == c) {
+				SUMPOT(i, a) += X3(t);
 			}
 		}
 
@@ -109,12 +112,16 @@ double evaluate_triplet_pll(
 
 		// compute g3
 		for(uint32_t t = 0; t < ntriplets; t++) {
-			uint32_t i = triplets[t * 3];
-			uint32_t j = triplets[t * 3 + 1];
-			uint32_t k = triplets[t * 3 + 2];
+			uint32_t i = triplets[t * 6];
+			uint32_t j = triplets[t * 6 + 1];
+			uint32_t k = triplets[t * 6 + 2];
+			uint8_t a = triplets[t * 6 + 3];
+			uint8_t b = triplets[t * 6 + 4];
+			uint8_t c = triplets[t * 6 + 5];
 
-			for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
-				G3(t, a, X(n, j), X(n, k)) -= weight * PCOND(i, a);
+
+			if(X(n, j) == b && X(n, k) == c) {
+				G3(t) -= weight * PCOND(i, a);
 			}
 		}
 
@@ -134,17 +141,6 @@ double evaluate_triplet_pll(
 		for(uint8_t a = 0; a < N_ALPHA; a++) {
 			G2(ij, a, N_ALPHA - 1) = 0;
 			G2(ij, N_ALPHA - 1, a) = 0;
-		}
-	}
-
-	// zero out possible gap gradients in G3
-	for(uint32_t t = 0; t < ntriplets; t++) {
-		for(uint8_t a = 0; a < N_ALPHA; a++) {
-			for(uint8_t b = 0; b < N_ALPHA; b++) {
-				G3(t, a, b, N_ALPHA - 1) = 0;
-				G3(t, a, N_ALPHA - 1, b) = 0;
-				G3(t, N_ALPHA - 1, a, b) = 0;
-			}
 		}
 	}
 
