@@ -39,7 +39,7 @@ def triplet_counts(msa, triplets, weights=None):
         weights = np.ones((nrow, ), dtype='float64')
 
     counts = np.zeros((ntriplets, ), dtype=np.dtype('float64'))
-    libmsac.msa_count_triplets(counts, msa, weights, *msa.shape, ntriplets, triplets)
+    libmsac.msa_count_triplets(counts, msa, weights, nrow, ncol, ntriplets, triplets)
 
     return counts
 
