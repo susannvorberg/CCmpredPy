@@ -68,15 +68,46 @@ class RegL2Action(argparse.Action):
 
 
 class StoreConstParametersAction(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, arg_default=None, default=None, **kwargs):
+    def __init__(self, option_strings, dest, nargs=None, arg_default=None, default=None, append=False, **kwargs):
         self.arg_default = arg_default
-        default = (default, arg_default)
+        self.append = append
+
+        if append:
+            default = []
+        else:
+            default = (default, arg_default)
         super(StoreConstParametersAction, self).__init__(option_strings, dest, nargs=nargs, default=default, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
         if values is None or values == self.const:
             values = self.arg_default
-        setattr(namespace, self.dest, (self.const, values))
+
+        val = (self.const, values)
+
+        if self.append:
+            getattr(namespace, self.dest).append(val)
+        else:
+            setattr(namespace, self.dest, val)
+
+
+def write_matrix(apc=False):
+    def inner(res, matfile):
+        print("Writing {1}summed score matrix to {0}".format(matfile, "APC-corrected " if apc else ""))
+        mat = ccmpred.scoring.frobenius_score(res.x_pair)
+
+        if apc:
+            mat = ccmpred.scoring.apc(mat)
+
+        np.savetxt(matfile, mat)
+
+    return inner
+
+
+def write_raw(format="oldraw"):
+    def inner(res, rawfile):
+        print("Writing {0}-formatted potentials to {1}".format(format, rawfile))
+        getattr(ccmpred.raw, "write_{0}".format(format))(rawfile, res)
+    return inner
 
 
 def parse_args():
@@ -84,13 +115,16 @@ def parse_args():
 
     parser.add_argument("-n", "--num-iterations", dest="numiter", default=100, type=int, help="Specify the number of iterations [default: %(default)s]")
     parser.add_argument("-i", "--init-from-raw", dest="initrawfile", default=None, help="Init potentials from raw file")
-    parser.add_argument("-r", "--write-raw", dest="outrawfile", default=None, help="Write potentials to raw file")
-    parser.add_argument("-b", "--write-msgpack", dest="outmsgpackfile", default=None, help="Write potentials to MessagePack file")
     parser.add_argument("--aln-format", dest="aln_format", default="psicov", help="File format for MSAs [default: \"%(default)s\"]")
     parser.add_argument("--no-logo", dest="logo", default=True, action="store_false", help="Disable showing the CCMpred logo")
 
     parser.add_argument("alnfile", help="Input alignment file to use")
-    parser.add_argument("matfile", help="Output matrix file to write")
+
+    grp_op = parser.add_argument_group("Output options")
+    grp_op.add_argument("-a", "--write-apc-matrix", dest="outputs", action=StoreConstParametersAction, append=True, const=write_matrix(apc=True), nargs=1, metavar="MATFILE", help="Write an APC-corrected summed score matrix to MATFILE")
+    grp_op.add_argument("-m", "--write-matrix", dest="outputs", action=StoreConstParametersAction, append=True, const=write_matrix(apc=False), nargs=1, metavar="MATFILE", help="Write a summed score matrix to MATFILE")
+    grp_op.add_argument("-r", "--write-raw", dest="outputs", action=StoreConstParametersAction, append=True, const=write_raw(format='oldraw'), nargs=1, metavar="RAWFILE", help="Write coupling potentials flat file to RAWFILE")
+    grp_op.add_argument("-b", "--write-msgpack", dest="outputs", action=StoreConstParametersAction, append=True, const=write_raw(format='msgpack'), nargs=1, metavar="BRAWFILE", help="Write coupling potentials MsgPack file to BRAWFILE")
 
     grp_of = parser.add_argument_group("Objective Functions")
     grp_of.add_argument("--ofn-pll", dest="objfun", action="store_const", const=pll.PseudoLikelihood, default=pll.PseudoLikelihood, help="Use pseudo-log-likelihood (default)")
@@ -125,6 +159,9 @@ def parse_args():
 
     if args.cd_alnfile and args.objfun not in (cd.ContrastiveDivergence, treecd.TreeContrastiveDivergence):
         parser.error("--write-cd-alignment is only supported for (tree) contrastive divergence!")
+
+    if not args.outputs:
+        parser.error("Need at least one output format!")
 
     return args
 
@@ -174,9 +211,9 @@ def main():
 
     print("\n{0} with code {code} -- {message}".format(condition, **algret))
 
-    import ipdb; ipdb.set_trace()
-
     res = f.finalize(x)
+
+    print()
 
     if opt.cd_alnfile and hasattr(f, 'msa_sampled'):
         print("Writing sampled alignment to {0}".format(opt.cd_alnfile))
@@ -185,19 +222,8 @@ def main():
         with open(opt.cd_alnfile, "w") as f:
             aln.write_msa_psicov(f, msa_sampled)
 
-    if opt.outrawfile:
-        print("Writing raw-formatted potentials to {0}".format(opt.outrawfile))
-        ccmpred.raw.write_oldraw(opt.outrawfile, res)
-
-    if opt.outmsgpackfile:
-        print("Writing msgpack-formatted potentials to {0}".format(opt.outmsgpackfile))
-        ccmpred.raw.write_msgpack(opt.outmsgpackfile, res)
-
-    print("Writing summed score matrix to {0}".format(opt.matfile))
-    mat = ccmpred.scoring.frobenius_score(res.x_pair)
-    np.savetxt(opt.matfile, mat)
-
-    print()
+    for out_function, out_args in opt.outputs:
+        out_function(res, *out_args)
 
     exitcode = 0 if algret['code'] > 0 else -algret['code']
     sys.exit(exitcode)
