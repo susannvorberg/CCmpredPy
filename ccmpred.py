@@ -110,6 +110,12 @@ def write_raw(format="oldraw"):
     return inner
 
 
+def write_triplets(res, tripletfile):
+    import ccmpred.triplets.write
+    print("Writing triplets to {0}".format(tripletfile))
+    ccmpred.triplets.write.write_triplets(tripletfile, res)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Recover direct couplings from a multiple sequence alignment", epilog=EPILOG)
 
@@ -121,10 +127,11 @@ def parse_args():
     parser.add_argument("alnfile", help="Input alignment file to use")
 
     grp_op = parser.add_argument_group("Output options")
-    grp_op.add_argument("-a", "--write-apc-matrix", dest="outputs", action=StoreConstParametersAction, append=True, const=write_matrix(apc=True), nargs=1, metavar="MATFILE", help="Write an APC-corrected summed score matrix to MATFILE")
+    grp_op.add_argument("--write-apc-matrix", dest="outputs", action=StoreConstParametersAction, append=True, const=write_matrix(apc=True), nargs=1, metavar="MATFILE", help="Write an APC-corrected summed score matrix to MATFILE")
     grp_op.add_argument("-m", "--write-matrix", dest="outputs", action=StoreConstParametersAction, append=True, const=write_matrix(apc=False), nargs=1, metavar="MATFILE", help="Write a summed score matrix to MATFILE")
     grp_op.add_argument("-r", "--write-raw", dest="outputs", action=StoreConstParametersAction, append=True, const=write_raw(format='oldraw'), nargs=1, metavar="RAWFILE", help="Write coupling potentials flat file to RAWFILE")
     grp_op.add_argument("-b", "--write-msgpack", dest="outputs", action=StoreConstParametersAction, append=True, const=write_raw(format='msgpack'), nargs=1, metavar="BRAWFILE", help="Write coupling potentials MsgPack file to BRAWFILE")
+    grp_op.add_argument("--write-triplets", dest="outputs", action=StoreConstParametersAction, append=True, const=write_triplets, nargs=1, metavar="TRIPLETFILE", help="Write triplet potentials to TRIPLETFILE")
 
     grp_of = parser.add_argument_group("Objective Functions")
     grp_of.add_argument("--ofn-pll", dest="objfun", action="store_const", const=pll.PseudoLikelihood, default=pll.PseudoLikelihood, help="Use pseudo-log-likelihood (default)")
