@@ -24,8 +24,5 @@ libtriplet.evaluate_triplet_pll.argtypes = [
 
 def evaluate(x, g, weights, msa, triplets):
     nrow, ncol = msa.shape
-    print("py-pre-eval")
-    print(g.shape)
     fx = libtriplet.evaluate_triplet_pll(x, g, weights, msa, triplets.reshape(-1), nrow, ncol, triplets.shape[0])
-    print("py-post-eval")
     return fx, g
