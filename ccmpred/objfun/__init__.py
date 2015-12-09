@@ -50,15 +50,12 @@ class ObjectiveFunction(object):
         data_tokens = [(n_iter, '8d'), (n_ls, '3d'), (fx, '12g'), (xnorm, '12g'), (gnorm, '12g')]
 
         if self.linear_to_structured:
-            ox_single, ox_pair = self.linear_to_structured(x)
-            xnorm_single = np.sum(ox_single ** 2)
-            xnorm_pair = np.sum(ox_pair ** 2)
+            ox = self.linear_to_structured(x)
+            og = self.linear_to_structured(g)
+            xnorm = [np.sum(p ** 2) for p in ox]
+            gnorm = [np.sum(p ** 2) for p in og]
 
-            og_single, og_pair = self.linear_to_structured(g)
-            gnorm_single = np.sum(og_single ** 2)
-            gnorm_pair = np.sum(og_pair ** 2)
-
-            data_tokens += [(xnorm_single, '12g'), (xnorm_pair, '12g'), (gnorm_single, '12g'), (gnorm_pair, '12g')]
+            data_tokens += [(xnorm[0], '12g'), (xnorm[1], '12g'), (gnorm[0], '12g'), (gnorm[1], '12g')]
 
         data_tokens += [(step, '12g')]
 

@@ -15,6 +15,7 @@ import ccmpred.regularization
 import ccmpred.objfun.pll as pll
 import ccmpred.objfun.cd as cd
 import ccmpred.objfun.treecd as treecd
+import ccmpred.objfun.triplet as triplet
 
 import ccmpred.algorithm.gradient_descent
 import ccmpred.algorithm.conjugate_gradients
@@ -42,6 +43,22 @@ class TreeCDAction(argparse.Action):
 
         namespace.objfun_args = [tree, seq0, id0]
         namespace.objfun = treecd.TreeContrastiveDivergence
+
+
+class TripletPLLAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        from ccmpred.triplets.pick import STRATEGIES, PAIR_TRANSFORMS
+
+        strategy, transform = values
+
+        if strategy not in STRATEGIES:
+            parser.error("Invalid strategy '{0}' - valid choices: {1}".format(strategy, ", ".join(STRATEGIES.keys())))
+
+        if transform not in PAIR_TRANSFORMS:
+            parser.error("Invalid tranform '{0}' - valid choices: {1}".format(transform, ", ".join(PAIR_TRANSFORMS.keys())))
+
+        namespace.objfun_args = [STRATEGIES[strategy], PAIR_TRANSFORMS[transform]]
+        namespace.objfun = triplet.TripletPseudoLikelihood
 
 
 class RegL2Action(argparse.Action):
@@ -79,6 +96,7 @@ def parse_args():
     grp_of.add_argument("--ofn-pll", dest="objfun", action="store_const", const=pll.PseudoLikelihood, default=pll.PseudoLikelihood, help="Use pseudo-log-likelihood (default)")
     grp_of.add_argument("--ofn-pcd", dest="objfun", action="store_const", const=cd.ContrastiveDivergence, help="Use Persistent Contrastive Divergence")
     grp_of.add_argument("--ofn-tree-cd", action=TreeCDAction, metavar=("TREEFILE", "ANCESTORFILE"), nargs=2, type=str, help="Use Tree-controlled Contrastive Divergence, loading tree data from TREEFILE and ancestral sequence data from ANCESTORFILE")
+    grp_of.add_argument("--ofn-triplet", dest="objfun", action=TripletPLLAction, const=triplet.TripletPseudoLikelihood, nargs=2, metavar=('STRATEGY', 'TRANSFORM'), type=str, help="Use triplet pseudo-likelihood, picking triplets by STRATEGY and transforming pair couplings with TRANSFORM to rank")
 
     grp_al = parser.add_argument_group("Algorithms")
     grp_al.add_argument("--alg-gd", dest="algorithm", action="store_const", const=ALGORITHMS['gradient_descent'], default=ALGORITHMS['gradient_descent'], help='Use gradient descent (default)')
@@ -155,6 +173,8 @@ def main():
     condition = "Finished" if algret['code'] >= 0 else "Exited"
 
     print("\n{0} with code {code} -- {message}".format(condition, **algret))
+
+    import ipdb; ipdb.set_trace()
 
     res = f.finalize(x)
 

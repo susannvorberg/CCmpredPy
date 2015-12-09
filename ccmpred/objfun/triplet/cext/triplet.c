@@ -20,7 +20,7 @@ double evaluate_triplet_pll(
 ) {
 	// partition x and g into pointers x1, x2, x3 and g1, g2, g3
 	const uint32_t x2pos = ncol * N_ALPHA;
-	const uint32_t x3pos = x2pos + ncol * ncol * N_ALPHA * N_ALPHA;
+	const uint32_t x3pos = x2pos + ncol * (ncol - 1) / 2 * N_ALPHA * N_ALPHA;
 	const uint64_t nvar = x3pos + ntriplets;
 	const double *x1 = x;
 	const double *x2 = &x[x2pos];
@@ -33,9 +33,23 @@ double evaluate_triplet_pll(
 	double fx = 0.0;
 	memset(g, 0, sizeof(double) * nvar);
 
+	printf("x %p\n", x);
+	printf("g %p\n", g);
+	printf("weights %p\n", weights);
+	printf("msa %p\n", msa);
+	printf("triplets %p\n", triplets);
+	printf("nrow %d\n", nrow);
+	printf("ncol %d\n", ncol);
+	printf("ntriplets %d\n", ntriplets);
+	printf("nvar %ld\n", nvar);
+
 	double *sum_pot = malloc(sizeof(double) * ncol * N_ALPHA);
 	double *log_z   = malloc(sizeof(double) * ncol);
 	double *p_cond  = malloc(sizeof(double) * ncol * N_ALPHA);
+
+	printf("sum_pot %p\n", sum_pot);
+	printf("log_z %p\n", log_z);
+	printf("p_cond %p\n", p_cond);
 
 	for(uint32_t n = 0; n < nrow; n++) {
 		double weight = weights[n];
@@ -130,6 +144,8 @@ double evaluate_triplet_pll(
 
 	}
 
+	printf("after-loop\n");
+
 	// zero out possible gap gradients in G1
 	for(uint32_t i = 0; i < ncol; i++) {
 		G1(i, N_ALPHA - 1) = 0;
@@ -144,9 +160,13 @@ double evaluate_triplet_pll(
 		}
 	}
 
+	printf("pre-free\n");
 	free(sum_pot);
 	free(log_z);
 	free(p_cond);
+	printf("post-free\n");
+
+	printf("done fx=%g\n", fx);
 
 	return fx;
 }

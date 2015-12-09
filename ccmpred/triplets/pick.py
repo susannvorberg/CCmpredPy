@@ -36,7 +36,7 @@ def pick_best_ijk(x_pair, n_triplets, min_separation):
         print("[{0:4d}] {1:3d} /{2:3d} /{3:3d}".format(t, trp[0], trp[1], trp[2]))
 
     # translate 3-triplets to 6-triplets enumerating all abc
-    triplet6 = ccmpred.triplets.triplet3to6(triplet3, short=True)
+    triplet6 = ccmpred.triplets.triplet3to6(triplet3, short=False)
 
     triplet_scores = np.repeat(triplet_scores, 20 ** 3)
 
