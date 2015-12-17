@@ -111,8 +111,6 @@ double evaluate_triplet_pll(
 					PCOND(i, a) = 0;
 				}
 
-			} else {
-				G1(i, X(n, i)) -= weight;
 			}
 		}
 
@@ -129,8 +127,6 @@ double evaluate_triplet_pll(
 			for(uint32_t j = i + 1; j < ncol; j++, ij++) {
 				uint8_t xni = X(n, i);
 				uint8_t xnj = X(n, j);
-
-				G2(ij, xni, xnj) -= weight * 2;
 
 				for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
 					G2(ij, a, xnj) += weight * PCOND(i, a);
@@ -158,10 +154,6 @@ double evaluate_triplet_pll(
 
 			if(X(n, i) == a && X(n, j) == b) {
 				G3(t) += weight * PCOND(k, c);
-			}
-
-			if(X(n, i) == a && X(n, j) == b && X(n, k) == c) {
-				G3(t) -= weight * 3;
 			}
 		}
 

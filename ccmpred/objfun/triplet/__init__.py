@@ -33,7 +33,7 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
         for i in range(self.ncol):
             msa_counts_pair[i, i, :, :] = 0
 
-        self.g_init = structured_to_linear(msa_counts_single, i_j_to_ij(msa_counts_pair), msa_counts_triplets)
+        self.g_init = structured_to_linear(msa_counts_single, i_j_to_ij(msa_counts_pair * 2), msa_counts_triplets * 3)
 
         self.nvar_single = self.ncol * 21
         self.nvar_pair = self.ncol * (self.ncol - 1) / 2 * 21 * 21
@@ -108,7 +108,7 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
     def evaluate(self, x):
         fx, g = ccmpred.objfun.triplet.cext.evaluate(x, self.g, self.weights, self.msa, self.triplets)
 
-        # self.g -= self.g_init
+        self.g -= self.g_init
 
         x_single, x_pair, x_triplet = linear_to_structured(x, self.ncol, self.triplets.shape[0])
         g_single, g_pair, g_triplet = linear_to_structured(g, self.ncol, self.triplets.shape[0])
