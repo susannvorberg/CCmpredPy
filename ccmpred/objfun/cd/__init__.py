@@ -12,6 +12,8 @@ class ContrastiveDivergence(ccmpred.objfun.ObjectiveFunction):
     def __init__(self, msa, freqs, weights, regularization, n_samples):
         super(ContrastiveDivergence, self).__init__()
 
+        regularization.lambda_pair_factor = 0.5
+
         self.msa = msa
         self.weights = weights
         self.regularization = regularization

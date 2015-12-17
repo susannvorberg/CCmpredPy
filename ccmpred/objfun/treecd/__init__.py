@@ -13,6 +13,8 @@ class TreeContrastiveDivergence(ccmpred.objfun.cd.ContrastiveDivergence):
     def __init__(self, msa, freqs, tree, seq0, id0, weights, regularization, mutation_rate):
         super(TreeContrastiveDivergence, self).__init__(msa, freqs, weights, regularization, len(tree.get_terminals()))
 
+        regularization.lambda_pair_factor = 0.5
+
         tree = split_tree(tree, id0)
 
         self.tree = tree

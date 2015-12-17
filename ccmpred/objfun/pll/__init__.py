@@ -11,6 +11,8 @@ class PseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
     def __init__(self, msa, freqs, weights, regularization):
         super(PseudoLikelihood, self).__init__()
 
+        regularization.lambda_pair_factor = 0.5
+
         self.msa = msa
 
         neff = np.sum(weights)
