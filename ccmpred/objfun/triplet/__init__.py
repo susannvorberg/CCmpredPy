@@ -108,11 +108,10 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
     def evaluate(self, x):
         fx, g = ccmpred.objfun.triplet.cext.evaluate(x, self.g, self.weights, self.msa, self.triplets)
 
-        # TODO check precomputed counts signs
-        self.g -= self.g_init
+        # self.g -= self.g_init
 
         x_single, x_pair, x_triplet = linear_to_structured(x, self.ncol, self.triplets.shape[0])
-        g_single, g_pair, x_triplet = linear_to_structured(g, self.ncol, self.triplets.shape[0])
+        g_single, g_pair, g_triplet = linear_to_structured(g, self.ncol, self.triplets.shape[0])
 
         fx_reg, g_single_reg, g_pair_reg, g_triplet_reg = self.regularization(x_single[:, :20], x_pair, x_triplet)
 

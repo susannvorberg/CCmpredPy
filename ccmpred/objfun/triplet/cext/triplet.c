@@ -52,6 +52,7 @@ double evaluate_triplet_pll(
 			for(uint32_t j = i + 1; j < ncol; j++, ij++) {
 				for(uint32_t a = 0; a < N_ALPHA - 1; a++) {
 					SUMPOT(i, a) += X2(ij, a, X(n, j));
+					SUMPOT(j, a) += X2(ij, X(n, i), a);
 				}
 			}
 		}
@@ -67,6 +68,18 @@ double evaluate_triplet_pll(
 			if(X(n, j) == b && X(n, k) == c) {
 				SUMPOT(i, a) += X3(t);
 			}
+
+			if(X(n, i) == a && X(n, k) == c) {
+				SUMPOT(j, b) += X3(t);
+			}
+
+			if(X(n, i) == a && X(n, j) == b) {
+				SUMPOT(k, c) += X3(t);
+			}
+		}
+
+		for(uint32_t i = 0; i < ncol; i++) {
+			SUMPOT(i, N_ALPHA - 1) = 0;
 		}
 
 		// compute log_z
@@ -89,6 +102,18 @@ double evaluate_triplet_pll(
 		// compute fx
 		for(uint32_t i = 0; i < ncol; i++) {
 			fx -= weight * (SUMPOT(i, X(n, i)) - log_z[i]);
+
+			if(X(n, i) == N_ALPHA - 1) {
+
+				fx -= weight * log_z[i];
+
+				for(int a = 0; a < N_ALPHA; a++) {
+					PCOND(i, a) = 0;
+				}
+
+			} else {
+				G1(i, X(n, i)) -= weight;
+			}
 		}
 
 		
@@ -102,10 +127,14 @@ double evaluate_triplet_pll(
 		// compute g2
 		for(uint32_t i = 0, ij = 0; i < ncol; i++) {
 			for(uint32_t j = i + 1; j < ncol; j++, ij++) {
+				uint8_t xni = X(n, i);
 				uint8_t xnj = X(n, j);
+
+				G2(ij, xni, xnj) -= weight * 2;
 
 				for(uint8_t a = 0; a < N_ALPHA - 1; a++) {
 					G2(ij, a, xnj) += weight * PCOND(i, a);
+					G2(ij, xni, a) += weight * PCOND(j, a);
 				}
 			}
 		}
@@ -119,14 +148,22 @@ double evaluate_triplet_pll(
 			uint8_t b = triplets[t * 6 + 4];
 			uint8_t c = triplets[t * 6 + 5];
 
-
 			if(X(n, j) == b && X(n, k) == c) {
 				G3(t) += weight * PCOND(i, a);
 			}
-		}
 
-		// TODO gap handling
-		// TODO check signs for negative PLL gradients, fx
+			if(X(n, i) == a && X(n, k) == c) {
+				G3(t) += weight * PCOND(j, b);
+			}
+
+			if(X(n, i) == a && X(n, j) == b) {
+				G3(t) += weight * PCOND(k, c);
+			}
+
+			if(X(n, i) == a && X(n, j) == b && X(n, k) == c) {
+				G3(t) -= weight * 3;
+			}
+		}
 
 	}
 
