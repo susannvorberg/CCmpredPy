@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 import random
 
 
@@ -60,9 +61,15 @@ def numdiff(objfun, x, epsilon=1e-5):
 
     nd_choices = [nd_single, nd_pair, nd_triplet][:len(x0)]
 
+    if len(x0) >= 3:
+        if x0[2].shape[0] == 0:
+            nd_choices = nd_choices[:2]
+
     print("Pos                                    x                 g            DeltaG")
+
+    ndi = 0
     while True:
-        pos0, positions = random.choice(nd_choices)(x0)
+        pos0, positions = nd_choices[ndi](x0)
 
         xA = duplicate(x0)
         xB = duplicate(x0)
@@ -86,3 +93,7 @@ def numdiff(objfun, x, epsilon=1e-5):
         print("gNumeric                                 {numdiff: .10e} {delta: .10e}".format(posstr=posstr, xval=xval, numdiff=numdiff, delta=symdiff - numdiff))
 
         print()
+
+        ndi = (ndi + 1) % len(nd_choices)
+
+    sys.exit(0)
