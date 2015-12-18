@@ -1,6 +1,5 @@
 import operator
 import collections
-import numpy as np
 
 from ccmpred.raw.ccmraw import stream_or_file
 
