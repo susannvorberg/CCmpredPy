@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument("pdbfile", help="File to load PDB file from")
     parser.add_argument("outfile", help="Output file")
 
-    parser.add_argument("-t", "--target", help="Add target information")
+    parser.add_argument("-m", "--method", help="Add method information")
 
     opt = parser.parse_args()
 
@@ -48,10 +48,14 @@ def main():
     triplets = load_triplets(opt.tripletfile)
     distance = distance_map(opt.pdbfile)
 
-    triplets['distance'] = distance[triplets['i'], triplets['j']] + distance[triplets['j'], triplets['k']] + distance[triplets['i'], triplets['k']]
+    triplets['distance'] = (
+        distance[triplets['i'], triplets['j']] +
+        distance[triplets['j'], triplets['k']] +
+        distance[triplets['i'], triplets['k']]
+    )
 
-    if opt.target:
-        triplets['target'] = opt.target
+    if opt.method:
+        triplets['method'] = opt.method
 
     triplets.to_csv(opt.outfile, sep="\t")
 
