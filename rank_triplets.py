@@ -48,7 +48,7 @@ def main():
     triplets = load_triplets(opt.tripletfile)
     distance = distance_map(opt.pdbfile)
 
-    triplets['distance'] = (
+    triplets['dijk'] = (
         distance[triplets['i'], triplets['j']] +
         distance[triplets['j'], triplets['k']] +
         distance[triplets['i'], triplets['k']]

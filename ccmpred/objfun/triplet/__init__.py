@@ -4,6 +4,7 @@ import ccmpred.raw
 import ccmpred.regularization
 import ccmpred.objfun
 import ccmpred.objfun.triplet.cext
+import ccmpred.triplets
 
 
 class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
@@ -77,7 +78,11 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
         min_separation = 5
 
         print("Picking up to {0} triplets with separation {1} using strategy {2} and transform {3}".format(n_triplets, min_separation, strategy, transform))
-        triplets, triplet_scores = strategy(transform(raw.x_pair), n_triplets, min_separation)
+        triplets = strategy(transform(raw.x_pair), n_triplets, min_separation)
+
+        # no matter what stategy, ensure that triplets is a shape (T, 6) ndarray of triplets
+        triplets = ccmpred.triplets.ensure_triplet6(triplets)
+        triplets = ccmpred.triplets.dataframe_to_ndarray(triplets)
 
         res = cls(msa, freqs, weights, regularization, triplets)
 

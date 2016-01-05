@@ -1,4 +1,4 @@
-import numpy as np
+import pandas as pd
 
 import ccmpred.triplets
 
@@ -17,9 +17,9 @@ def pick_random_triplets(x_pair, n_triplets, min_separation):
         b = random.randint(0, 19)
         c = random.randint(0, 19)
 
-        out.append((i, j, k, a, b, c))
+        out.append((i, j, k, a, b, c, 0.0))
 
-    return np.array(out, dtype="uint32"), np.zeros((n_triplets, ))
+    return pd.DataFrame(out, columns=("i", "j", "k", "a", "b", "c", "score"), )
 
 
 # pick 6-triplets ijkabc that maximize w_{ij}(a,b) + w_{jk}(b,c) + w_{ik}(a,c)
@@ -29,14 +29,7 @@ def pick_best_ijkabc(x_pair, n_triplets, min_separation):
 
 # pick 3-triplets ijk that maximize sum_{a,b,c=1}^{20} w_{ij}(a,b) + w_{jk}(b,c) + w_{ik}(a,c)
 def pick_best_ijk(x_pair, n_triplets, min_separation):
-    triplet3, triplet_scores = ccmpred.triplets.find_triplet3(x_pair, n_triplets, min_separation)
-
-    # translate 3-triplets to 6-triplets enumerating all abc
-    triplet6 = ccmpred.triplets.triplet3to6(triplet3, short=False)
-
-    triplet_scores = np.repeat(triplet_scores, 20 ** 3)
-
-    return triplet6, triplet_scores
+    return ccmpred.triplets.find_triplet3(x_pair, n_triplets, min_separation)
 
 
 STRATEGIES = {

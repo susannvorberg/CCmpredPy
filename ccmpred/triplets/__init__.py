@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import numpy.ctypeslib as npct
 import ctypes
 import itertools
@@ -35,27 +36,49 @@ def find_triplet6(x_pair, n_triplets, min_separation):
     triplets = np.zeros((n_triplets, 6), dtype="uint32")
     triplet_scores = np.zeros((n_triplets, ), dtype="double")
     ntrip = libtriplets.find_triplet6(x_pair, triplets, triplet_scores, x_pair.shape[0], n_triplets, min_separation)
-    return triplets[:ntrip, :], triplet_scores[:ntrip]
+
+    result = pd.DataFrame(triplets[:ntrip, :], columns=("i", "j", "k", "a", "b", "c"))
+    result['score'] = triplet_scores[:ntrip]
+
+    return result
 
 
 def find_triplet3(x_pair, n_triplets, min_separation):
     triplets = np.zeros((n_triplets, 3), dtype="uint32")
     triplet_scores = np.zeros((n_triplets, ), dtype="double")
     ntrip = libtriplets.find_triplet3(x_pair, triplets, triplet_scores, x_pair.shape[0], n_triplets, min_separation)
-    return triplets[:ntrip, :], triplet_scores[:ntrip]
+
+    result = pd.DataFrame(triplets[:ntrip, :], columns=("i", "j", "k"))
+    result['score'] = triplet_scores[:ntrip]
+
+    return result
 
 
-def triplet3to6(triplet3, short=False):
-    if short:
-        triplet6 = np.empty((triplet3.shape[0], 6), dtype="uint32")
-        triplet6[:, :3] = triplet3
-        triplet6[:, 3:6] = 0
+def triplet3to6(df):
 
+    df = pd.concat((
+        pd.concat((
+            df,
+            pd.DataFrame({
+                "a": np.repeat(a, df.shape[0]),
+                "b": np.repeat(b, df.shape[0]),
+                "c": np.repeat(c, df.shape[0])
+            })
+        ), axis=1)
+        for a in range(20)
+        for b in range(20)
+        for c in range(20)
+    ))
+
+    return df
+
+
+def ensure_triplet6(df):
+    if 'a' not in df.columns:
+        return triplet3to6(df)
     else:
-        amino_grid = np.array(list(itertools.product(* ([range(20)] * 3))))
+        return df
 
-        triplet6 = np.empty((triplet3.shape[0] * amino_grid.shape[0], 6), dtype="uint32")
-        triplet6[:, :3] = np.repeat(triplet3, amino_grid.shape[0], axis=0)
-        triplet6[:, 3:6] = np.repeat(amino_grid, triplet3.shape[0], axis=0)
 
-    return triplet6
+def dataframe_to_ndarray(df):
+    return np.array(df[['i', 'j', 'k', 'a', 'b', 'c']], dtype='uint32')
