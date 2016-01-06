@@ -57,7 +57,7 @@ def main():
     if opt.method:
         triplets['method'] = opt.method
 
-    triplets.to_csv(opt.outfile, sep="\t")
+    triplets.to_csv(opt.outfile, sep="\t", index=False)
 
 
 if __name__ == '__main__':
