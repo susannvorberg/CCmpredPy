@@ -116,10 +116,12 @@ def write_triplets(res, tripletfile):
     ccmpred.triplets.write.write_triplets(tripletfile, res)
 
 
-def write_sum_triplets(res, tripletfile):
+def write_combined_triplets(res, combinator, tripletfile):
     import ccmpred.triplets.write
-    print("Writing summed triplets to {0}".format(tripletfile))
-    ccmpred.triplets.write.write_sum_triplets(tripletfile, res)
+    print("Writing triplets combined with '{1}' to {0}".format(tripletfile, combinator))
+
+    combine_fn = ccmpred.triplets.write.get_combinator(combinator)
+    ccmpred.triplets.write.write_combined_triplets(tripletfile, res, combine=combine_fn)
 
 
 def parse_args():
@@ -138,7 +140,7 @@ def parse_args():
     grp_op.add_argument("-r", "--write-raw", dest="outputs", action=StoreConstParametersAction, append=True, const=write_raw(format='oldraw'), nargs=1, metavar="RAWFILE", help="Write coupling potentials flat file to RAWFILE")
     grp_op.add_argument("-b", "--write-msgpack", dest="outputs", action=StoreConstParametersAction, append=True, const=write_raw(format='msgpack'), nargs=1, metavar="BRAWFILE", help="Write coupling potentials MsgPack file to BRAWFILE")
     grp_op.add_argument("--write-triplets", dest="outputs", action=StoreConstParametersAction, append=True, const=write_triplets, nargs=1, metavar="TRIPLETFILE", help="Write triplet potentials to TRIPLETFILE")
-    grp_op.add_argument("--write-sum-triplets", dest="outputs", action=StoreConstParametersAction, append=True, const=write_sum_triplets, nargs=1, metavar="TRIPLETFILE", help="Write summed triplet potentials to TRIPLETFILE")
+    grp_op.add_argument("--write-combined-triplets", dest="outputs", action=StoreConstParametersAction, append=True, const=write_combined_triplets, nargs=2, metavar=("COMBINATOR", "TRIPLETFILE"), help="Write combined triplet potentials to TRIPLETFILE")
 
     grp_of = parser.add_argument_group("Objective Functions")
     grp_of.add_argument("--ofn-pll", dest="objfun", action="store_const", const=pll.PseudoLikelihood, default=pll.PseudoLikelihood, help="Use pseudo-log-likelihood (default)")
