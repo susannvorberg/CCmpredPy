@@ -28,13 +28,14 @@ def main():
 
     triplets = collections.defaultdict(list)
 
-    sum_triplets = pd.read_table(args.sum_triplets, header=None, comment="#")
-    assert(sum_triplets.shape[1] == 4)
-    sum_triplets.columns = ['i', 'j', 'k', 'score']
-    for _, trp in sum_triplets.iterrows():
-        triplets[(trp.i, trp.j)].append(trp.score)
-        triplets[(trp.j, trp.k)].append(trp.score)
-        triplets[(trp.i, trp.k)].append(trp.score)
+    if args.sum_triplets:
+        sum_triplets = pd.read_table(args.sum_triplets, header=None, comment="#")
+        assert(sum_triplets.shape[1] == 4)
+        sum_triplets.columns = ['i', 'j', 'k', 'score']
+        for _, trp in sum_triplets.iterrows():
+            triplets[(trp.i, trp.j)].append(trp.score)
+            triplets[(trp.j, trp.k)].append(trp.score)
+            triplets[(trp.i, trp.k)].append(trp.score)
 
     with open(args.model, "rb") as f_model:
         model = pickle.load(f_model)
