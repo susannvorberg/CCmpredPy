@@ -18,8 +18,7 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
         self.weights = weights
         self.regularization = regularization
 
-        # TODO make this configurable
-        self.regularization.lambda_triplet = 0.1
+        assert self.regularization.lambda_triplet is not None
 
         neff = np.sum(weights)
         freqs_single, freqs_pair = freqs
@@ -49,10 +48,10 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
 
     @classmethod
     def init_from_default(cls, msa, freqs, weights, regularization, strategy, transform):
-        res = cls(msa, freqs, weights, regularization)
 
         # TODO
         raise Exception("TODO - run regular PLL then init this!")
+        triplets = None
 
         # TODO centering
         if hasattr(regularization, "center_x_single"):
@@ -64,6 +63,8 @@ class TripletPseudoLikelihood(ccmpred.objfun.ObjectiveFunction):
 
         else:
             x = np.zeros((res.nvar, ), dtype=np.dtype('float64'))
+
+        res = cls(msa, freqs, weights, regularization, triplets)
 
         return x, res
 

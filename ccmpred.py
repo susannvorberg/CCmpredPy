@@ -64,7 +64,7 @@ class TripletPLLAction(argparse.Action):
 class RegL2Action(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         lambda_single, lambda_pair = values
-        namespace.regularization = lambda msa, centering: ccmpred.regularization.L2(lambda_single, lambda_pair * (msa.shape[1] - 1), centering)
+        namespace.regularization = lambda msa, centering, args: ccmpred.regularization.L2(lambda_single, lambda_pair * (msa.shape[1] - 1), centering, args.lambda_triplet)
 
 
 class StoreConstParametersAction(argparse.Action):
@@ -158,7 +158,8 @@ def parse_args():
     grp_wt.add_argument("--wt-uniform", dest="weight", action="store_const", const=ccmpred.weighting.weights_uniform, help='Use uniform weighting')
 
     grp_rg = parser.add_argument_group("Regularization")
-    grp_rg.add_argument("--reg-l2", dest="regularization", action=RegL2Action, type=float, nargs=2, metavar=("LAMBDA_SINGLE", "LAMBDA_PAIR"), default=lambda msa, centering: ccmpred.regularization.L2(10, 0.2 * (msa.shape[1] - 1), centering), help='Use L2 regularization with coefficients LAMBDA_SINGLE, LAMBDA_PAIR * L (default: 10 0.2)')
+    grp_rg.add_argument("--reg-l2", dest="regularization", action=RegL2Action, type=float, nargs=2, metavar=("LAMBDA_SINGLE", "LAMBDA_PAIR"), default=lambda msa, centering, args: ccmpred.regularization.L2(10, 0.2 * (msa.shape[1] - 1), centering, args.lambda_triplet), help='Use L2 regularization with coefficients LAMBDA_SINGLE, LAMBDA_PAIR * L (default: 10 0.2)')
+    grp_rg.add_argument("--reg-triplet", dest="lambda_triplet", type=float, default=0.1, metavar="LAMBDA_TRIPLET", help="Set regularization coefficient for triplet interactions [default: %(default)s]")
 
     grp_pc = parser.add_argument_group("Pseudocounts")
     grp_pc.add_argument("--pc-submat", dest="pseudocounts", action=StoreConstParametersAction, default=ccmpred.pseudocounts.substitution_matrix_pseudocounts, const=ccmpred.pseudocounts.substitution_matrix_pseudocounts, nargs="?", metavar="N", type=float, arg_default=1, help="Use N substitution matrix pseudocounts (default) (by default, N=1)")
@@ -205,12 +206,12 @@ def main():
     if opt.initrawfile:
         raw = ccmpred.raw.parse(opt.initrawfile)
         centering = raw.x_single.copy()
-        regularization = opt.regularization(msa, centering)
+        regularization = opt.regularization(msa, centering, opt)
         x0, f = opt.objfun.init_from_raw(msa, freqs, weights, raw, regularization, *opt.objfun_args, **opt.objfun_kwargs)
 
     else:
         centering = ccmpred.centering.calculate(msa, freqs)
-        regularization = opt.regularization(msa, centering)
+        regularization = opt.regularization(msa, centering, opt)
         x0, f = opt.objfun.init_from_default(msa, freqs, weights, regularization, *opt.objfun_args, **opt.objfun_kwargs)
 
     if opt.comparerawfile:
