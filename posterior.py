@@ -15,6 +15,7 @@ def parse_args():
     parser.add_argument("out_matrix", help="Output posterior matrix to write")
 
     parser.add_argument("-m", "--model", default="data/triplet_posterior.pickle", help="mixem probability model learned for computing the posterior")
+    parser.add_argument("-s", "--min-separation", type=int, default=8, help="Specify minimum sequence separation [default: %(default)s]")
 
     args = parser.parse_args()
 
@@ -71,12 +72,19 @@ def main():
 
         p_contact = model['p_contact']
 
+        p_in_triplet = model.get('p_in_triplet', None)
+
     posterior_matrix = np.zeros_like(sum_matrix)
 
     ncol = sum_matrix.shape[0]
 
     for i in range(ncol):
         for j in range(i + 1, ncol):
+
+            if sum_matrix[i, j] < 0:
+                posterior_matrix[i, j] = float("-inf")
+                posterior_matrix[j, i] = float("-inf")
+                continue
 
             log_bf = np.log(p_contact) - np.log(1 - p_contact)
 
@@ -85,11 +93,25 @@ def main():
                 np.log(mixem.probability(sum_matrix[i, j], *pair_model[1]))
             )
 
-            if triplets is not None and (i, j) in triplets:
-                log_bf += (
-                    np.log(mixem.probability(triplets[(i, j)], *triplet_model[0])) -
-                    np.log(mixem.probability(triplets[(i, j)], *triplet_model[1]))
-                )
+            if triplets is not None:
+
+                if (i, j) in triplets:
+                    log_bf += (
+                        np.log(p_in_triplet[0]) -
+                        np.log(p_in_triplet[1])
+                    )
+
+                    log_bf += (
+                        np.log(mixem.probability(triplets[(i, j)], *triplet_model[0])) -
+                        np.log(mixem.probability(triplets[(i, j)], *triplet_model[1]))
+                    )
+                else:
+                    pass
+                    log_bf += (
+                        np.log(1 - p_in_triplet[0]) -
+                        np.log(1 - p_in_triplet[1])
+                    )
+
 
             posterior_matrix[i, j] = log_bf
             posterior_matrix[j, i] = log_bf
